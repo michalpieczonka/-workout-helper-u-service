@@ -8,6 +8,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import pm.workout.helper.api.authentication.request.CreateUserRequest;
 import pm.workout.helper.api.authentication.request.SignInUserRequest;
+import pm.workout.helper.api.user.request.AddUserPhotoRequest;
 import pm.workout.helper.api.user.request.UpdateUserDetailsRequest;
 import pm.workout.helper.api.user.request.UpdateUserHealthDetailsRequest;
 import pm.workout.helper.domain.notification.Notification;
@@ -33,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@AllArgsConstructor
 class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
@@ -126,16 +128,25 @@ class UserServiceImpl implements UserService {
         AppUser appUser = userRepository.findUserById(userId).orElseThrow(
                 () -> new UserNotFoundException(String.format("User with id %s not found", userId)));
 
-        AppUserHealthDetails appUserHealthDetails = AppUserHealthDetails.builder()
-                .weight(request.getWeight())
-                .height(request.getHeight())
-                .waistCircuit(request.getWaistCircuit())
-                .waistCircumference(request.getWaistCircumference())
-                .armCircumference(request.getArmCircumference())
-                .latestUpdatedTime(LocalDateTime.now())
-                .thighCircumference(request.getThighCircumference()).build();
+        AppUserHealthDetails healthDetails = appUser.getHealthDetails();
+        healthDetails.setWeight(request.getWeight());
+        healthDetails.setHeight(request.getHeight());
+        healthDetails.setWaistCircuit(request.getWaistCircuit());
+        healthDetails.setWaistCircumference(request.getWaistCircumference());
+        healthDetails.setArmCircumference(request.getArmCircumference());
+        healthDetails.setLatestUpdatedTime(LocalDateTime.now());
+        healthDetails.setThighCircumference(request.getThighCircumference());
 
-        appUser.updateHealthDetails(appUserHealthDetails);
+//        AppUserHealthDetails appUserHealthDetails = AppUserHealthDetails.builder()
+//                .weight(request.getWeight())
+//                .height(request.getHeight())
+//                .waistCircuit(request.getWaistCircuit())
+//                .waistCircumference(request.getWaistCircumference())
+//                .armCircumference(request.getArmCircumference())
+//                .latestUpdatedTime(LocalDateTime.now())
+//                .thighCircumference(request.getThighCircumference()).build();
+
+       // appUser.updateHealthDetails(appUserHealthDetails);
     }
 
     @Transactional
@@ -168,14 +179,14 @@ class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void saveUserPhoto(long userId, MultipartFile file) throws IOException {
+    public void saveUserPhoto(long userId, AddUserPhotoRequest file) throws IOException {
         AppUser appUser = userRepository.findUserById(userId).orElseThrow(
                 () -> new UserNotFoundException(String.format("User with id %s not found", userId)));
         AppUserPhoto appUserPhoto = AppUserPhoto.builder()
-                .name(file.getOriginalFilename())
+                .name(file.getFileName())
                 .type(file.getContentType())
                 .uploadedTime(LocalDateTime.now())
-                .imageData(ImageCompressor.compressImage(file.getBytes()))
+                .imageData(file.getFile())
                 .build();
         appUserPhoto.linkWithUser(appUser);
         appUser.addPhoto(appUserPhoto);

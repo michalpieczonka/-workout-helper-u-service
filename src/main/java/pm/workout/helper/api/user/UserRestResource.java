@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+import pm.workout.helper.api.user.request.AddUserPhotoRequest;
 import pm.workout.helper.api.user.request.ChangePasswordRequest;
 import pm.workout.helper.api.user.request.UpdateUserDetailsRequest;
 import pm.workout.helper.api.user.request.UpdateUserHealthDetailsRequest;
@@ -71,7 +72,7 @@ public class UserRestResource {
 
     @PostMapping("/{userId}/photos")
     void addUserPhoto(@PathVariable @NotNull long userId,
-                      @RequestParam("file") MultipartFile file) throws IOException {
+                      @RequestBody @NotNull AddUserPhotoRequest file) throws IOException {
         userService.saveUserPhoto(userId, file);
     }
 

@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 @Entity
 @Table(name = "users_health_details")
+@Setter
 public class AppUserHealthDetails {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "sequenceGeneratorUsersHealthDetails")
@@ -36,7 +37,6 @@ public class AppUserHealthDetails {
 
     @OneToOne(cascade= CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
     @JoinColumn(name = "app_user_id", referencedColumnName = "id")
-    @Setter
     private AppUser appUser;
 
     private double weight;
