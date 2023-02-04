@@ -28,4 +28,5 @@ public interface UserService {
     void changeUserPassword(long userId, String currentPassword, String newPassword);
     void deleteUserPhoto(long userPhotoId);
     void findUsersWithUpdateRequiredAndSendNotification();
+    void findUsersWithTrainingTodayAndSendReminderNotification();
 }

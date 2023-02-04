@@ -8,10 +8,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnTransformer;
+import pm.workout.helper.domain.training.plan.TrainingDay;
 import pm.workout.helper.domain.user.health.AppUserHealthDetails;
 import pm.workout.helper.domain.user.health.AppUserPhoto;
 
 import javax.persistence.CascadeType;
+import javax.persistence.CollectionTable;
+import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.EnumType;
 import javax.persistence.Enumerated;
@@ -35,7 +39,7 @@ import java.util.Set;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor(access = AccessLevel.PROTECTED)
-@EqualsAndHashCode
+//@EqualsAndHashCode
 @Entity
 @Table(name = "users")
 public class AppUser {
@@ -66,6 +70,14 @@ public class AppUser {
 
     @Setter
     private Long currentTrainingPlanId;
+
+    @Builder.Default
+    @ElementCollection
+    @CollectionTable(name = "users_training_days", joinColumns = @JoinColumn(name = "id"))
+    @Column(name = "training_days")
+    @Enumerated(EnumType.STRING)
+    @Setter
+    private Set<TrainingDay> trainingDays = new HashSet<>();
 
     @Enumerated(EnumType.STRING)
     private UserAuthority userAuthority;

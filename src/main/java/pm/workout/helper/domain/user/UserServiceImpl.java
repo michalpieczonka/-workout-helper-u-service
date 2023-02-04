@@ -14,6 +14,7 @@ import pm.workout.helper.api.user.request.UpdateUserHealthDetailsRequest;
 import pm.workout.helper.domain.notification.Notification;
 import pm.workout.helper.domain.notification.NotificationRepository;
 import pm.workout.helper.domain.notification.NotificationType;
+import pm.workout.helper.domain.training.plan.TrainingDay;
 import pm.workout.helper.domain.training.plan.dto.TrainingPlanDetailsDto;
 import pm.workout.helper.domain.user.authentication.dto.AppUserDto;
 import pm.workout.helper.domain.user.dto.AppUserPhotoDto;
@@ -27,8 +28,10 @@ import pm.workout.helper.infrastructure.services.TrainingPlanConfigurationServic
 import pm.workout.helper.infrastructure.utils.ImageCompressor;
 
 import java.io.IOException;
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Objects;
 import java.util.Optional;
@@ -136,17 +139,6 @@ class UserServiceImpl implements UserService {
         healthDetails.setArmCircumference(request.getArmCircumference());
         healthDetails.setLatestUpdatedTime(LocalDateTime.now());
         healthDetails.setThighCircumference(request.getThighCircumference());
-
-//        AppUserHealthDetails appUserHealthDetails = AppUserHealthDetails.builder()
-//                .weight(request.getWeight())
-//                .height(request.getHeight())
-//                .waistCircuit(request.getWaistCircuit())
-//                .waistCircumference(request.getWaistCircumference())
-//                .armCircumference(request.getArmCircumference())
-//                .latestUpdatedTime(LocalDateTime.now())
-//                .thighCircumference(request.getThighCircumference()).build();
-
-       // appUser.updateHealthDetails(appUserHealthDetails);
     }
 
     @Transactional
@@ -158,6 +150,7 @@ class UserServiceImpl implements UserService {
         if (trainingPlan.isPresent()) {
             if (trainingPlan.get().getPlanUsersIds().contains(userId)){
                 appUser.setCurrentTrainingPlanId(trainingPlanId);
+                appUser.setTrainingDays(trainingPlan.get().getTrainingDays());
             } else throw new IllegalStateException("Training plan not found");
         }
         else
@@ -179,7 +172,7 @@ class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public void saveUserPhoto(long userId, AddUserPhotoRequest file) throws IOException {
+    public void saveUserPhoto(long userId, AddUserPhotoRequest file) {
         AppUser appUser = userRepository.findUserById(userId).orElseThrow(
                 () -> new UserNotFoundException(String.format("User with id %s not found", userId)));
         AppUserPhoto appUserPhoto = AppUserPhoto.builder()
@@ -190,8 +183,6 @@ class UserServiceImpl implements UserService {
                 .build();
         appUserPhoto.linkWithUser(appUser);
         appUser.addPhoto(appUserPhoto);
-
-        //userRepository.saveUserPhoto(appUserPhoto);
     }
 
     @Transactional(readOnly = true)
@@ -223,6 +214,23 @@ class UserServiceImpl implements UserService {
                     String latestUpdateProfileDate = user.getHealthDetails().getLatestUpdatedTime().toLocalDate().toString();
                     notificationRepository.sendNotification(new Notification(NotificationType.PROFILE_UPDATE_REMINDER, user.getId(), user.getEmail(),
                             "<h1> Drogi użytkowniku </h1> <br> <p> Nie aktualizowałeś swoich danych od "+latestUpdateProfileDate+" dni. Zaktualizuj je w panelu użytkownika. </p> " +
+                                    "<br /> Zespół WorkoutHelper"));
+                });
+    }
+
+    @Transactional
+    @Override
+    public void findUsersWithTrainingTodayAndSendReminderNotification() {
+        Calendar calendar = Calendar.getInstance();
+        int dayOfWeek = calendar.get(Calendar.DAY_OF_WEEK);
+        TrainingDay today = TrainingDay.values()[dayOfWeek-1];
+
+        userRepository.getAllUsers().stream()
+                .filter(user -> user.getTrainingDays().contains(today))
+                .filter(AppUser::isNotificationsEnabled)
+                .forEach(user -> {
+                    notificationRepository.sendNotification(new Notification(NotificationType.TRAINING_TODAY_REMINDER, user.getId(), user.getEmail(),
+                            "<h1> Drogi użytkowniku </h1> <br> <p> Pamiętaj, że dzisiaj masz trening !" +
                                     "<br /> Zespół WorkoutHelper"));
                 });
     }

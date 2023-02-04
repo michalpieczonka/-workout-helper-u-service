@@ -20,4 +20,12 @@ public class UserNotificationScheduler {
         userService.findUsersWithUpdateRequiredAndSendNotification();
         log.info("Daily users update required notification task finished");
     }
+
+
+    @Scheduled(cron="0 00 10 * * ? ", zone="Europe/Warsaw")
+    public void dailyUsersTrainingReminderNotificationTask() {
+        log.info("Starting daily training reminder notification task");
+        userService.findUsersWithTrainingTodayAndSendReminderNotification();
+        log.info("Daily training reminder task finished");
+    }
 }
